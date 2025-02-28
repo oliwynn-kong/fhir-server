@@ -1,37 +1,41 @@
-# Namespace for deployment (used by some charts; you'll also specify this when installing via Helm)
-namespace: apps
-
-replicaCount: 1
-
-image:
-  repository: olikong/fhir-server
-  tag: latest
-  pullPolicy: IfNotPresent
-
-service:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fhir-server
+  namespace: apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fhir-server
+  template:
+    metadata:
+      labels:
+        app: fhir-server
+    spec:
+      containers:
+      - name: fhir-server
+        image: olikong/fhir-server:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fhir-server
+  namespace: apps
+spec:
+  selector:
+    app: fhir-server
+  ports:
+  - protocol: TCP
+    port: 3000
+    targetPort: 3000
   type: ClusterIP
-  port: 3000
-
-# Optionally configure resource requests and limits
-resources:
-  limits:
-    cpu: 100m
-    memory: 128Mi
-  requests:
-    cpu: 50m
-    memory: 64Mi
-
-# Ingress configuration (disabled by default)
-ingress:
-  enabled: false
-  annotations: {}
-  hosts:
-    - host: fhir.example.com
-      paths:
-        - /
-  tls: []
-
-# Node scheduling preferences (if needed)
-nodeSelector: {}
-tolerations: []
-affinity: {}
