@@ -1,0 +1,30 @@
+{
+    "name": "fhir-nodejs-server",
+    "version": "1.0.0",
+    "description": "A simple FHIR R4 server implementation using Node.js and Express with XML support",
+    "main": "fhir-server.js",
+    "scripts": {
+      "start": "node fhir-server.js",
+      "dev": "nodemon fhir-server.js"
+    },
+    "keywords": [
+      "fhir",
+      "hl7",
+      "healthcare",
+      "api",
+      "rest",
+      "xml"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+      "express": "^4.18.2",
+      "body-parser": "^1.20.2",
+      "uuid": "^9.0.1",
+      "js2xmlparser": "^5.0.0",
+      "xml2js": "^0.6.2"
+    },
+    "devDependencies": {
+      "nodemon": "^3.0.1"
+    }
+  }

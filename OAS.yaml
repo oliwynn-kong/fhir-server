@@ -1,0 +1,473 @@
+openapi: 3.0.0
+info:
+  title: FHIR Server API
+  version: "1.0.0"
+  description: >
+    A simple FHIR server implementation supporting Patient and Observation resources.
+    This API supports both JSON (application/fhir+json) and XML (application/fhir+xml) formats.
+servers:
+  - url: http://localhost:3000
+paths:
+  /Patient:
+    get:
+      summary: Search for patients
+      description: Retrieve a list of Patient resources with optional filtering.
+      parameters:
+        - in: query
+          name: _id
+          schema:
+            type: string
+          description: Filter by patient ID.
+        - in: query
+          name: family
+          schema:
+            type: string
+          description: Filter by family name (case-insensitive substring match).
+        - in: query
+          name: given
+          schema:
+            type: string
+          description: Filter by given name (case-insensitive substring match).
+        - in: query
+          name: birthdate
+          schema:
+            type: string
+            format: date
+          description: Filter by birthdate (YYYY-MM-DD).
+        - in: query
+          name: gender
+          schema:
+            type: string
+          description: Filter by gender.
+        - in: query
+          name: _count
+          schema:
+            type: integer
+            default: 10
+          description: Limit the number of results returned.
+      responses:
+        '200':
+          description: A Bundle resource containing matching Patient resources.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Bundle'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/Bundle'
+    post:
+      summary: Create a new patient
+      description: Create a new Patient resource.
+      requestBody:
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Patient'
+          application/fhir+xml:
+            schema:
+              $ref: '#/components/schemas/Patient'
+      responses:
+        '201':
+          description: Patient created successfully.
+          headers:
+            Location:
+              description: URL of the created Patient.
+              schema:
+                type: string
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid resource type.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+  /Patient/{id}:
+    get:
+      summary: Get a patient by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the Patient.
+      responses:
+        '200':
+          description: A Patient resource.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '404':
+          description: Patient not found.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+    put:
+      summary: Update a patient by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the Patient.
+      requestBody:
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Patient'
+          application/fhir+xml:
+            schema:
+              $ref: '#/components/schemas/Patient'
+      responses:
+        '200':
+          description: Patient updated successfully.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid resource type.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+        '404':
+          description: Patient not found.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+    delete:
+      summary: Delete a patient by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the Patient.
+      responses:
+        '204':
+          description: Patient deleted successfully (no content).
+        '404':
+          description: Patient not found.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+  /Observation:
+    get:
+      summary: Search for observations
+      description: Retrieve a list of Observation resources with optional filtering.
+      parameters:
+        - in: query
+          name: patient
+          schema:
+            type: string
+          description: Filter by patient reference (e.g., "Patient/pat-001").
+        - in: query
+          name: code
+          schema:
+            type: string
+          description: Filter by observation code.
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          description: Filter by observation effective date (YYYY-MM-DD).
+      responses:
+        '200':
+          description: A Bundle resource containing matching Observation resources.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Bundle'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/Bundle'
+    post:
+      summary: Create a new observation
+      description: Create a new Observation resource.
+      requestBody:
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Observation'
+          application/fhir+xml:
+            schema:
+              $ref: '#/components/schemas/Observation'
+      responses:
+        '201':
+          description: Observation created successfully.
+          headers:
+            Location:
+              description: URL of the created Observation.
+              schema:
+                type: string
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Observation'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/Observation'
+        '400':
+          description: Invalid resource type.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+            application/fhir+xml:
+              schema:
+                $ref: '#/components/schemas/OperationOutcome'
+components:
+  schemas:
+    Patient:
+      type: object
+      required:
+        - resourceType
+        - id
+      properties:
+        resourceType:
+          type: string
+          enum:
+            - Patient
+        id:
+          type: string
+        meta:
+          type: object
+          properties:
+            versionId:
+              type: string
+            lastUpdated:
+              type: string
+              format: date-time
+        name:
+          type: array
+          items:
+            type: object
+            properties:
+              use:
+                type: string
+              family:
+                type: string
+              given:
+                type: array
+                items:
+                  type: string
+        gender:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        address:
+          type: array
+          items:
+            type: object
+            properties:
+              use:
+                type: string
+              line:
+                type: array
+                items:
+                  type: string
+              city:
+                type: string
+              state:
+                type: string
+              postalCode:
+                type: string
+              country:
+                type: string
+        telecom:
+          type: array
+          items:
+            type: object
+            properties:
+              system:
+                type: string
+              value:
+                type: string
+              use:
+                type: string
+    Observation:
+      type: object
+      required:
+        - resourceType
+        - id
+      properties:
+        resourceType:
+          type: string
+          enum:
+            - Observation
+        id:
+          type: string
+        meta:
+          type: object
+          properties:
+            versionId:
+              type: string
+            lastUpdated:
+              type: string
+              format: date-time
+        status:
+          type: string
+        category:
+          type: array
+          items:
+            type: object
+            properties:
+              coding:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    system:
+                      type: string
+                    code:
+                      type: string
+                    display:
+                      type: string
+        code:
+          type: object
+          properties:
+            coding:
+              type: array
+              items:
+                type: object
+                properties:
+                  system:
+                    type: string
+                  code:
+                    type: string
+                  display:
+                    type: string
+        subject:
+          type: object
+          properties:
+            reference:
+              type: string
+            display:
+              type: string
+        effectiveDateTime:
+          type: string
+          format: date-time
+        issued:
+          type: string
+          format: date-time
+        valueQuantity:
+          type: object
+          properties:
+            value:
+              type: number
+            unit:
+              type: string
+            system:
+              type: string
+            code:
+              type: string
+    Bundle:
+      type: object
+      required:
+        - resourceType
+        - id
+      properties:
+        resourceType:
+          type: string
+          enum:
+            - Bundle
+        id:
+          type: string
+        meta:
+          type: object
+          properties:
+            lastUpdated:
+              type: string
+              format: date-time
+        type:
+          type: string
+        total:
+          type: integer
+        link:
+          type: array
+          items:
+            type: object
+            properties:
+              relation:
+                type: string
+              url:
+                type: string
+        entry:
+          type: array
+          items:
+            type: object
+            properties:
+              fullUrl:
+                type: string
+              resource:
+                oneOf:
+                  - $ref: '#/components/schemas/Patient'
+                  - $ref: '#/components/schemas/Observation'
+    OperationOutcome:
+      type: object
+      required:
+        - resourceType
+        - id
+      properties:
+        resourceType:
+          type: string
+          enum:
+            - OperationOutcome
+        id:
+          type: string
+        meta:
+          type: object
+          properties:
+            lastUpdated:
+              type: string
+              format: date-time
+        issue:
+          type: array
+          items:
+            type: object
+            properties:
+              severity:
+                type: string
+              code:
+                type: string
+              diagnostics:
+                type: string
