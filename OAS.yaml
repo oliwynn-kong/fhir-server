@@ -6,7 +6,7 @@ info:
     A simple FHIR server implementation supporting Patient and Observation resources.
     This API supports both JSON (application/fhir+json) and XML (application/fhir+xml) formats.
 servers:
-  - url: http://localhost:3000
+  - url: fhir-server.apps.svc.cluster.local:3000
 paths:
   /Patient:
     get:
