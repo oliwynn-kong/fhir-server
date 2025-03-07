@@ -1,0 +1,82 @@
+_format_version: "3.0"
+services:
+- host: host.docker.internal
+  id: 96a0f6da-e53e-50d5-8014-470f314419e9
+  name: fhir-server-api
+  path: /
+  plugins: []
+  port: 3000
+  protocol: http
+  routes:
+  - id: 6405c9bf-e479-59bf-b0b1-5cfe959c7f42
+    methods:
+    - GET
+    name: fhir-server-api_observation_get
+    paths:
+    - ~/Observation$
+    plugins: []
+    regex_priority: 200
+    strip_path: false
+    tags: []
+  - id: e021f0b3-4014-5e04-b91c-786ab84156c4
+    methods:
+    - POST
+    name: fhir-server-api_observation_post
+    paths:
+    - ~/Observation$
+    plugins: []
+    regex_priority: 200
+    strip_path: false
+    tags: []
+  - id: 3b9747a5-dbe9-5243-b46f-0a8686765494
+    methods:
+    - GET
+    name: fhir-server-api_patient_get
+    paths:
+    - ~/Patient$
+    plugins: []
+    regex_priority: 200
+    strip_path: false
+    tags: []
+  - id: 92a43e22-6160-5a18-9774-120712259903
+    methods:
+    - POST
+    name: fhir-server-api_patient_post
+    paths:
+    - ~/Patient$
+    plugins: []
+    regex_priority: 200
+    strip_path: false
+    tags: []
+  - id: f2a3b052-df1d-5fe9-9b69-5f19cdef71a1
+    methods:
+    - DELETE
+    name: fhir-server-api_patient-id_delete
+    paths:
+    - ~/Patient/(?<id>[^#?/]+)$
+    plugins: []
+    regex_priority: 100
+    strip_path: false
+    tags: []
+  - id: 20a1855c-e5b5-5a24-ad0b-3b6d608e5b97
+    methods:
+    - GET
+    name: fhir-server-api_patient-id_get
+    paths:
+    - ~/Patient/(?<id>[^#?/]+)$
+    plugins: []
+    regex_priority: 100
+    strip_path: false
+    tags: []
+  - id: d58aaa2d-3252-5153-bdd7-974ace95dbe5
+    methods:
+    - PUT
+    name: fhir-server-api_patient-id_put
+    paths:
+    - ~/Patient/(?<id>[^#?/]+)$
+    plugins: []
+    regex_priority: 100
+    strip_path: false
+    tags: []
+  tags: []
+upstreams: []
