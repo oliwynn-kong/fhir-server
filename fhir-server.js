@@ -379,6 +379,7 @@ app.get('/Patient', (req, res) => {
   }
   const count = req.query._count ? parseInt(req.query._count) : 10;
   const limitedPatients = filteredPatients.slice(0, count);
+  console.log('Incoming Headers:', req.headers);
   formatResponse(res, createBundle('Patient', limitedPatients, filteredPatients.length));
 });
 
@@ -399,6 +400,7 @@ app.post('/Patient', (req, res) => {
   };
   db.patients.push(newPatient);
   res.status(201).header('Location', `http://localhost:${PORT}/Patient/${newPatient.id}`);
+  console.log('Incoming Headers:', req.headers);
   formatResponse(res, newPatient);
 });
 
@@ -409,6 +411,7 @@ app.get('/Patient/:id', (req, res) => {
     const outcome = createOperationOutcome('error', 'not-found', `Patient with ID ${req.params.id} not found`);
     return formatResponse(res.status(404), outcome);
   }
+  console.log('Incoming Headers:', req.headers);
   formatResponse(res, patient);
 });
 
@@ -432,6 +435,7 @@ app.put('/Patient/:id', (req, res) => {
     }
   };
   db.patients[patientIndex] = updatedPatient;
+  console.log('Incoming Headers:', req.headers);
   formatResponse(res, updatedPatient);
 });
 

@@ -1,0 +1,149 @@
+_format_version: "3.0"
+_konnect:
+  control_plane_name: HealthcareGateway
+consumers:
+- keyauth_credentials:
+  - key: '{vault://healthcare/apikey}'
+  username: ElaitFhirConsumer
+services:
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: fhir-server-api
+  path: /
+  plugins:
+  - config:
+      anonymous: null
+      hide_credentials: false
+      key_in_body: false
+      key_in_header: true
+      key_in_query: true
+      key_names:
+      - apikey
+      realm: null
+      run_on_preflight: true
+    enabled: true
+    name: key-auth
+    protocols:
+    - grpc
+    - grpcs
+    - http
+    - https
+    - ws
+    - wss
+  port: 3000
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    methods:
+    - POST
+    name: fhir-server-api_createobservation
+    path_handling: v0
+    paths:
+    - ~/Observation$
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 200
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    methods:
+    - POST
+    name: fhir-server-api_createpatient
+    path_handling: v0
+    paths:
+    - ~/Patient$
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 200
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    methods:
+    - DELETE
+    name: fhir-server-api_deletepatientbyid
+    path_handling: v0
+    paths:
+    - ~/Patient/(?<id>[^#?/]+)$
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 100
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    methods:
+    - GET
+    name: fhir-server-api_getpatientbyid
+    path_handling: v0
+    paths:
+    - ~/Patient/(?<id>[^#?/]+)$
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 100
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    methods:
+    - GET
+    name: fhir-server-api_searchobservations
+    path_handling: v0
+    paths:
+    - ~/Observation$
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 200
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    methods:
+    - GET
+    name: fhir-server-api_searchpatients
+    path_handling: v0
+    paths:
+    - ~/Patient$
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 200
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    methods:
+    - PUT
+    name: fhir-server-api_updatepatientbyid
+    path_handling: v0
+    paths:
+    - ~/Patient/(?<id>[^#?/]+)$
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 100
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+vaults:
+- config:
+    config_store_id: a229728f-7d3c-4b0f-acbc-7a1d55b046a3
+  name: konnect
+  prefix: healthcare
