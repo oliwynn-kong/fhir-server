@@ -8,8 +8,11 @@ A simple implementation of a FHIR R4 server using Node.js and Express. This serv
 
 - Node.js (v14 or higher)
 - npm (v6 or higher)
+- Docker (optional, for containerized deployment)
 
 ### Installation
+
+#### Local Installation
 
 1. Clone or download this repository
 2. Install dependencies:
@@ -25,6 +28,46 @@ npm start
 ```
 
 The server will start on port 3000 by default. You can change this by setting the `PORT` environment variable.
+
+#### Docker Installation
+
+1. Build the Docker image:
+
+```bash
+docker build -t fhir-server .
+```
+
+2. Run the container:
+
+```bash
+docker run -p 3000:3000 -d fhir-server
+```
+
+This will start the FHIR server on port 3000 of your host machine.
+
+## Dockerfile
+
+The project includes a Dockerfile for containerization:
+
+```dockerfile
+FROM node:16-alpine
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install app dependencies
+COPY package*.json ./
+RUN npm install
+
+# Bundle app source
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Start the application
+CMD ["npm", "start"]
+```
 
 ## Content Negotiation
 
@@ -159,6 +202,33 @@ curl -X GET "http://localhost:3000/Patient/pat-001" -H "Accept: application/fhir
 
 ```bash
 curl -X GET "http://localhost:3000/Observation?patient=Patient/pat-001" -H "Accept: application/fhir+xml"
+```
+
+## Docker Commands
+
+### Build the container
+```bash
+docker build -t fhir-server .
+```
+
+### Run the container
+```bash
+docker run -p 3000:3000 -d fhir-server
+```
+
+### View running containers
+```bash
+docker ps
+```
+
+### Stop the container
+```bash
+docker stop <container_id>
+```
+
+### Remove the container
+```bash
+docker rm <container_id>
 ```
 
 ## Notes
