@@ -8,11 +8,11 @@ const xml2js = require('xml2js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Middleware for JSON and XML bodies
 app.use(bodyParser.json({ type: ['application/json', 'application/fhir+json'] }));
 app.use(express.text({ type: 'application/fhir+xml' }));
 
-// Accept header parser to determine response format
+// Determine response format based on Accept header
 app.use((req, res, next) => {
   const acceptHeader = req.get('Accept') || '';
   req.wantsXml = acceptHeader.includes('application/fhir+xml') || acceptHeader.includes('application/xml');
@@ -278,34 +278,29 @@ const db = {
   ]
 };
 
-// Response formatter: For XML responses, we generate FHIR-compliant XML.
-// For Bundle resources, each entry is transformed so that its "resource" field is
-// wrapped with an element named for its resource type.
+// Response formatter: Supports JSON and XML responses.
 function formatResponse(res, data) {
   if (res.req.wantsXml) {
     let xmlContent;
+    // For Bundle resources, use "Bundle" as the root element.
     if (data.resourceType === 'Bundle') {
       xmlContent = js2xmlparser.parse("Bundle", data, {
         declaration: {
           include: true,
           encoding: "UTF-8"
         },
-        format: {
-          doubleQuotes: true
-        },
+        format: { doubleQuotes: true },
         cdataInvalidChars: true
       });
     } else {
+      // For single resources, use their resourceType as the XML root.
       const resourceType = data.resourceType;
-      const resourceData = { ...data };
-      xmlContent = js2xmlparser.parse(resourceType, resourceData, {
+      xmlContent = js2xmlparser.parse(resourceType, data, {
         declaration: {
           include: true,
           encoding: "UTF-8"
         },
-        format: {
-          doubleQuotes: true
-        },
+        format: { doubleQuotes: true },
         cdataInvalidChars: true
       });
     }
@@ -315,11 +310,8 @@ function formatResponse(res, data) {
   }
 }
 
-// Utility function to create a Bundle.
-// Each entry is transformed so that the resource is wrapped as:
-//    <resource>
-//      <Patient> ... </Patient>
-//    </resource>
+// Utility function to create a Bundle resource.
+// Each entry now simply uses the resource object directly.
 function createBundle(resourceType, resources, total) {
   return {
     resourceType: "Bundle",
@@ -335,18 +327,10 @@ function createBundle(resourceType, resources, total) {
         url: `http://localhost:${PORT}/${resourceType}`
       }
     ],
-    entry: resources.map(resource => {
-      const resType = resource.resourceType;
-      const resourceCopy = { ...resource };
-      // Remove resourceType from inside the wrapped resource so it isn’t duplicated.
-      delete resourceCopy.resourceType;
-      return {
-        fullUrl: `http://localhost:${PORT}/${resType}/${resource.id}`,
-        resource: {
-          [resType]: resourceCopy
-        }
-      };
-    })
+    entry: resources.map(resource => ({
+      fullUrl: `http://localhost:${PORT}/${resource.resourceType}/${resource.id}`,
+      resource: resource
+    }))
   };
 }
 
@@ -358,11 +342,7 @@ function createOperationOutcome(severity, code, diagnostics) {
       lastUpdated: new Date().toISOString()
     },
     issue: [
-      {
-        severity: severity,
-        code: code,
-        diagnostics: diagnostics
-      }
+      { severity, code, diagnostics }
     ]
   };
 }
@@ -422,7 +402,7 @@ app.post('/Patient', (req, res) => {
   formatResponse(res, newPatient);
 });
 
-// GET /Patient/{id} - Get a patient by ID
+// GET /Patient/{id} - Retrieve a patient by ID
 app.get('/Patient/:id', (req, res) => {
   const patient = db.patients.find(p => p.id === req.params.id);
   if (!patient) {
@@ -517,9 +497,9 @@ app.listen(PORT, () => {
   console.log('Available endpoints:');
   console.log('- GET /Patient - Search for patients');
   console.log('- POST /Patient - Create a patient');
-  console.log('- GET /Patient/{id} - Get patient by ID');
-  console.log('- PUT /Patient/{id} - Update patient');
-  console.log('- DELETE /Patient/{id} - Delete patient');
+  console.log('- GET /Patient/{id} - Get a patient by ID');
+  console.log('- PUT /Patient/{id} - Update a patient');
+  console.log('- DELETE /Patient/{id} - Delete a patient');
   console.log('- GET /Observation - Search for observations');
   console.log('- POST /Observation - Create an observation');
 });

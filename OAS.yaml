@@ -289,25 +289,68 @@ components:
   schemas:
     Patient:
       type: object
+      description: >
+        Demographics and other administrative information about an individual or animal
+        receiving care or other health-related services.
+      additionalProperties: false
       required:
         - resourceType
-        - id
       properties:
         resourceType:
+          description: This is a Patient resource.
           type: string
           enum:
             - Patient
         id:
+          description: The logical id of the resource.
           type: string
         meta:
+          description: The metadata about the resource.
           type: object
-          properties:
-            versionId:
-              type: string
-            lastUpdated:
-              type: string
-              format: date-time
+        implicitRules:
+          description: A reference to a set of rules that were followed when the resource was constructed.
+          type: string
+          format: uri
+        _implicitRules:
+          description: Extensions for implicitRules.
+          type: object
+        language:
+          description: The base language in which the resource is written.
+          type: string
+        _language:
+          description: Extensions for language.
+          type: object
+        text:
+          description: A human-readable narrative summary of the resource.
+          type: object
+        contained:
+          description: Resources contained within this resource.
+          type: array
+          items:
+            type: object
+        extension:
+          description: Additional information not part of the basic definition.
+          type: array
+          items:
+            type: object
+        modifierExtension:
+          description: Additional information that modifies the understanding of the element.
+          type: array
+          items:
+            type: object
+        identifier:
+          description: An identifier for this patient.
+          type: array
+          items:
+            type: object
+        active:
+          description: Whether this patient record is in active use.
+          type: boolean
+        _active:
+          description: Extensions for active.
+          type: object
         name:
+          description: A name associated with the individual.
           type: array
           items:
             type: object
@@ -320,12 +363,46 @@ components:
                 type: array
                 items:
                   type: string
+        telecom:
+          description: Contact details for the patient.
+          type: array
+          items:
+            type: object
+            properties:
+              system:
+                type: string
+              value:
+                type: string
+              use:
+                type: string
         gender:
+          description: Administrative gender for record keeping.
           type: string
+        _gender:
+          description: Extensions for gender.
+          type: object
         birthDate:
+          description: The date of birth for the individual.
           type: string
           format: date
+        _birthDate:
+          description: Extensions for birthDate.
+          type: object
+        deceasedBoolean:
+          description: Indicates if the individual is deceased.
+          type: boolean
+        _deceasedBoolean:
+          description: Extensions for deceasedBoolean.
+          type: object
+        deceasedDateTime:
+          description: Date/time of death.
+          type: string
+          format: date-time
+        _deceasedDateTime:
+          description: Extensions for deceasedDateTime.
+          type: object
         address:
+          description: An address for the individual.
           type: array
           items:
             type: object
@@ -344,19 +421,156 @@ components:
                 type: string
               country:
                 type: string
-        telecom:
+        maritalStatus:
+          description: The patient's most recent marital status.
+          type: object
+        multipleBirthBoolean:
+          description: Indicates whether the patient is part of a multiple birth (boolean).
+          type: boolean
+        _multipleBirthBoolean:
+          description: Extensions for multipleBirthBoolean.
+          type: object
+        multipleBirthInteger:
+          description: The birth order of the patient in a multiple birth.
+          type: number
+        _multipleBirthInteger:
+          description: Extensions for multipleBirthInteger.
+          type: object
+        photo:
+          description: Image of the patient.
           type: array
           items:
             type: object
-            properties:
-              system:
-                type: string
-              value:
-                type: string
-              use:
-                type: string
+        contact:
+          description: A contact party for the patient.
+          type: array
+          items:
+            $ref: '#/components/schemas/Patient_Contact'
+        communication:
+          description: A language which may be used to communicate with the patient.
+          type: array
+          items:
+            $ref: '#/components/schemas/Patient_Communication'
+        generalPractitioner:
+          description: Patient’s nominated care provider.
+          type: array
+          items:
+            type: object
+        managingOrganization:
+          description: Organization that is the custodian of the patient record.
+          type: object
+        link:
+          description: Links to other resources that concern the same individual.
+          type: array
+          items:
+            $ref: '#/components/schemas/Patient_Link'
+    Patient_Contact:
+      type: object
+      description: A contact party for the patient.
+      additionalProperties: false
+      properties:
+        id:
+          description: Unique id for the element.
+          type: string
+        extension:
+          description: Additional information.
+          type: array
+          items:
+            type: object
+        modifierExtension:
+          description: Additional information that modifies the element.
+          type: array
+          items:
+            type: object
+        relationship:
+          description: The nature of the relationship between the patient and the contact person.
+          type: array
+          items:
+            type: object
+        name:
+          description: A name associated with the contact person.
+          type: object
+        telecom:
+          description: Contact details for the person.
+          type: array
+          items:
+            type: object
+        address:
+          description: Address for the contact person.
+          type: object
+        gender:
+          description: Administrative gender.
+          type: string
+        _gender:
+          description: Extensions for gender.
+          type: object
+        organization:
+          description: Organization on behalf of which the contact is acting.
+          type: object
+        period:
+          description: The period during which this contact is valid.
+          type: object
+    Patient_Communication:
+      type: object
+      description: Communication preferences for the patient.
+      additionalProperties: false
+      required:
+        - language
+      properties:
+        id:
+          description: Unique id for the element.
+          type: string
+        extension:
+          description: Additional information.
+          type: array
+          items:
+            type: object
+        modifierExtension:
+          description: Additional information that modifies the element.
+          type: array
+          items:
+            type: object
+        language:
+          description: The language for communication.
+          type: object
+        preferred:
+          description: Indicates whether this language is preferred.
+          type: boolean
+        _preferred:
+          description: Extensions for preferred.
+          type: object
+    Patient_Link:
+      type: object
+      description: Link to a Patient or RelatedPerson resource.
+      additionalProperties: false
+      required:
+        - other
+      properties:
+        id:
+          description: Unique id for the element.
+          type: string
+        extension:
+          description: Additional information.
+          type: array
+          items:
+            type: object
+        modifierExtension:
+          description: Additional information that modifies the element.
+          type: array
+          items:
+            type: object
+        other:
+          description: Link to another resource.
+          type: object
+        type:
+          description: The type of link.
+          type: string
+        _type:
+          description: Extensions for type.
+          type: object
     Observation:
       type: object
+      description: An Observation resource.
       required:
         - resourceType
         - id
@@ -433,6 +647,7 @@ components:
               type: string
     Bundle:
       type: object
+      description: A FHIR Bundle resource.
       required:
         - resourceType
         - id
@@ -475,6 +690,7 @@ components:
                   - $ref: '#/components/schemas/Observation'
     OperationOutcome:
       type: object
+      description: A FHIR OperationOutcome resource.
       required:
         - resourceType
         - id
