@@ -23,12 +23,11 @@ app.use((req, res, next) => {
 app.use(async (req, res, next) => {
   if (req.is('application/fhir+xml') || req.is('application/xml')) {
     try {
-      const parser = new xml2js.Parser({ 
+      const parser = new xml2js.Parser({
         explicitArray: false,
         explicitRoot: true
       });
       req.body = await parser.parseStringPromise(req.body);
-      
       // Extract the actual resource from the XML root
       const resourceType = Object.keys(req.body)[0];
       if (resourceType) {
@@ -279,14 +278,13 @@ const db = {
   ]
 };
 
-// Response formatter
+// Response formatter: For XML responses, we generate FHIR-compliant XML.
+// For Bundle resources, each entry is transformed so that its "resource" field is
+// wrapped with an element named for its resource type.
 function formatResponse(res, data) {
   if (res.req.wantsXml) {
-    // For XML responses
     let xmlContent;
-    
     if (data.resourceType === 'Bundle') {
-      // Special handling for Bundle resources
       xmlContent = js2xmlparser.parse("Bundle", data, {
         declaration: {
           include: true,
@@ -295,36 +293,11 @@ function formatResponse(res, data) {
         format: {
           doubleQuotes: true
         },
-        cdataInvalidChars: true,
-        wrapHandlers: {
-          entry: function(entry) {
-            // Ensure entry.resource is properly wrapped with its resourceType
-            if (entry && entry.resource) {
-              const resourceType = entry.resource.resourceType;
-              const resourceData = { ...entry };
-              
-              // Create a resource wrapper with correct resourceType
-              resourceData.resource = { 
-                [resourceType]: { ...entry.resource }
-              };
-              
-              // Remove original resourceType as it's now in the XML tag
-              delete resourceData.resource[resourceType].resourceType;
-              
-              return resourceData;
-            }
-            return entry;
-          }
-        }
+        cdataInvalidChars: true
       });
     } else {
-      // For single resources
       const resourceType = data.resourceType;
       const resourceData = { ...data };
-      
-      // Remove resourceType as it will be the XML root element name
-      delete resourceData.resourceType;
-      
       xmlContent = js2xmlparser.parse(resourceType, resourceData, {
         declaration: {
           include: true,
@@ -336,15 +309,17 @@ function formatResponse(res, data) {
         cdataInvalidChars: true
       });
     }
-    
     res.type('application/fhir+xml').send(xmlContent);
   } else {
-    // For JSON responses
     res.type('application/fhir+json').json(data);
   }
 }
 
-// Utility functions
+// Utility function to create a Bundle.
+// Each entry is transformed so that the resource is wrapped as:
+//    <resource>
+//      <Patient> ... </Patient>
+//    </resource>
 function createBundle(resourceType, resources, total) {
   return {
     resourceType: "Bundle",
@@ -360,10 +335,18 @@ function createBundle(resourceType, resources, total) {
         url: `http://localhost:${PORT}/${resourceType}`
       }
     ],
-    entry: resources.map(resource => ({
-      fullUrl: `http://localhost:${PORT}/${resource.resourceType}/${resource.id}`,
-      resource: resource
-    }))
+    entry: resources.map(resource => {
+      const resType = resource.resourceType;
+      const resourceCopy = { ...resource };
+      // Remove resourceType from inside the wrapped resource so it isn’t duplicated.
+      delete resourceCopy.resourceType;
+      return {
+        fullUrl: `http://localhost:${PORT}/${resType}/${resource.id}`,
+        resource: {
+          [resType]: resourceCopy
+        }
+      };
+    })
   };
 }
 
@@ -386,69 +369,46 @@ function createOperationOutcome(severity, code, diagnostics) {
 
 // FHIR API Endpoints
 
-// Patient Endpoints
 // GET /Patient - Search for patients
 app.get('/Patient', (req, res) => {
   let filteredPatients = [...db.patients];
-  
-  // Filter by id
   if (req.query._id) {
     filteredPatients = filteredPatients.filter(patient => patient.id === req.query._id);
   }
-  
-  // Filter by family name
   if (req.query.family) {
-    filteredPatients = filteredPatients.filter(patient => 
-      patient.name.some(name => 
+    filteredPatients = filteredPatients.filter(patient =>
+      patient.name.some(name =>
         name.family && name.family.toLowerCase().includes(req.query.family.toLowerCase())
       )
     );
   }
-  
-  // Filter by given name
   if (req.query.given) {
-    filteredPatients = filteredPatients.filter(patient => 
-      patient.name.some(name => 
-        name.given && name.given.some(given => 
+    filteredPatients = filteredPatients.filter(patient =>
+      patient.name.some(name =>
+        name.given && name.given.some(given =>
           given.toLowerCase().includes(req.query.given.toLowerCase())
         )
       )
     );
   }
-  
-  // Filter by birthdate
   if (req.query.birthdate) {
-    filteredPatients = filteredPatients.filter(patient => 
-      patient.birthDate === req.query.birthdate
-    );
+    filteredPatients = filteredPatients.filter(patient => patient.birthDate === req.query.birthdate);
   }
-  
-  // Filter by gender
   if (req.query.gender) {
-    filteredPatients = filteredPatients.filter(patient => 
-      patient.gender === req.query.gender
-    );
+    filteredPatients = filteredPatients.filter(patient => patient.gender === req.query.gender);
   }
-  
-  // Apply _count parameter if provided
   const count = req.query._count ? parseInt(req.query._count) : 10;
   const limitedPatients = filteredPatients.slice(0, count);
-  
-  // Return bundle
   formatResponse(res, createBundle('Patient', limitedPatients, filteredPatients.length));
 });
 
 // POST /Patient - Create a patient
 app.post('/Patient', (req, res) => {
   const patient = req.body;
-  
-  // Validate resource type
   if (!patient.resourceType || patient.resourceType !== 'Patient') {
     const outcome = createOperationOutcome('error', 'invalid', 'Resource type must be Patient');
     return formatResponse(res.status(400), outcome);
   }
-  
-  // Create new patient
   const newPatient = {
     ...patient,
     id: `pat-${uuidv4().slice(0, 8)}`,
@@ -457,9 +417,7 @@ app.post('/Patient', (req, res) => {
       lastUpdated: new Date().toISOString()
     }
   };
-  
   db.patients.push(newPatient);
-  
   res.status(201).header('Location', `http://localhost:${PORT}/Patient/${newPatient.id}`);
   formatResponse(res, newPatient);
 });
@@ -467,31 +425,24 @@ app.post('/Patient', (req, res) => {
 // GET /Patient/{id} - Get a patient by ID
 app.get('/Patient/:id', (req, res) => {
   const patient = db.patients.find(p => p.id === req.params.id);
-  
   if (!patient) {
     const outcome = createOperationOutcome('error', 'not-found', `Patient with ID ${req.params.id} not found`);
     return formatResponse(res.status(404), outcome);
   }
-  
   formatResponse(res, patient);
 });
 
 // PUT /Patient/{id} - Update a patient
 app.put('/Patient/:id', (req, res) => {
   const patientIndex = db.patients.findIndex(p => p.id === req.params.id);
-  
   if (patientIndex === -1) {
     const outcome = createOperationOutcome('error', 'not-found', `Patient with ID ${req.params.id} not found`);
     return formatResponse(res.status(404), outcome);
   }
-  
-  // Validate resource type
   if (!req.body.resourceType || req.body.resourceType !== 'Patient') {
     const outcome = createOperationOutcome('error', 'invalid', 'Resource type must be Patient');
     return formatResponse(res.status(400), outcome);
   }
-  
-  // Update patient
   const updatedPatient = {
     ...req.body,
     id: req.params.id,
@@ -500,70 +451,52 @@ app.put('/Patient/:id', (req, res) => {
       lastUpdated: new Date().toISOString()
     }
   };
-  
   db.patients[patientIndex] = updatedPatient;
-  
   formatResponse(res, updatedPatient);
 });
 
 // DELETE /Patient/{id} - Delete a patient
 app.delete('/Patient/:id', (req, res) => {
   const patientIndex = db.patients.findIndex(p => p.id === req.params.id);
-  
   if (patientIndex === -1) {
     const outcome = createOperationOutcome('error', 'not-found', `Patient with ID ${req.params.id} not found`);
     return formatResponse(res.status(404), outcome);
   }
-  
   db.patients.splice(patientIndex, 1);
-  
   res.status(204).send();
 });
 
-// Observation Endpoints
 // GET /Observation - Search for observations
 app.get('/Observation', (req, res) => {
   let filteredObservations = [...db.observations];
-  
-  // Filter by patient
   if (req.query.patient) {
     const patientId = req.query.patient.replace('Patient/', '');
-    filteredObservations = filteredObservations.filter(obs => 
+    filteredObservations = filteredObservations.filter(obs =>
       obs.subject && obs.subject.reference && obs.subject.reference.includes(patientId)
     );
   }
-  
-  // Filter by code
   if (req.query.code) {
-    filteredObservations = filteredObservations.filter(obs => 
-      obs.code && obs.code.coding && obs.code.coding.some(coding => 
+    filteredObservations = filteredObservations.filter(obs =>
+      obs.code && obs.code.coding && obs.code.coding.some(coding =>
         coding.code === req.query.code
       )
     );
   }
-  
-  // Filter by date
   if (req.query.date) {
-    filteredObservations = filteredObservations.filter(obs => 
+    filteredObservations = filteredObservations.filter(obs =>
       obs.effectiveDateTime && obs.effectiveDateTime.startsWith(req.query.date)
     );
   }
-  
-  // Return bundle
   formatResponse(res, createBundle('Observation', filteredObservations, filteredObservations.length));
 });
 
 // POST /Observation - Create an observation
 app.post('/Observation', (req, res) => {
   const observation = req.body;
-  
-  // Validate resource type
   if (!observation.resourceType || observation.resourceType !== 'Observation') {
     const outcome = createOperationOutcome('error', 'invalid', 'Resource type must be Observation');
     return formatResponse(res.status(400), outcome);
   }
-  
-  // Create new observation
   const newObservation = {
     ...observation,
     id: `obs-${uuidv4().slice(0, 8)}`,
@@ -572,9 +505,7 @@ app.post('/Observation', (req, res) => {
       lastUpdated: new Date().toISOString()
     }
   };
-  
   db.observations.push(newObservation);
-  
   res.status(201).header('Location', `http://localhost:${PORT}/Observation/${newObservation.id}`);
   formatResponse(res, newObservation);
 });
