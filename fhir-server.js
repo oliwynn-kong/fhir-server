@@ -311,7 +311,7 @@ function formatResponse(res, data) {
 }
 
 // Utility function to create a Bundle resource.
-// Each entry now simply uses the resource object directly.
+// Each entry now simply uses the resource object directly. 
 function createBundle(resourceType, resources, total) {
   return {
     resourceType: "Bundle",
