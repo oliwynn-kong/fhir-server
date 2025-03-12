@@ -3,8 +3,47 @@ _konnect:
   control_plane_name: HealthcareGateway
 consumers:
 - keyauth_credentials:
-  - key: '{vault://healthcare/apikey}'
+  - key: fhir_key
   username: ElaitFhirConsumer
+plugins:
+- config:
+    add:
+      body: []
+      headers:
+      - '{vault://healthcaregw/basicauth}'
+      json_types: []
+      querystring: []
+    allow:
+      body: null
+    append:
+      body: []
+      headers: []
+      json_types: []
+      querystring: []
+    dots_in_keys: true
+    http_method: null
+    remove:
+      body: []
+      headers:
+      - apikey
+      querystring: []
+    rename:
+      body: []
+      headers: []
+      querystring: []
+    replace:
+      body: []
+      headers: []
+      json_types: []
+      querystring: []
+      uri: null
+  enabled: true
+  name: request-transformer-advanced
+  protocols:
+  - grpc
+  - grpcs
+  - http
+  - https
 services:
 - connect_timeout: 60000
   enabled: true
@@ -144,6 +183,6 @@ services:
   write_timeout: 60000
 vaults:
 - config:
-    config_store_id: a229728f-7d3c-4b0f-acbc-7a1d55b046a3
+    config_store_id: 3d7f5c95-d135-4ec7-a7e0-f7a8d2304e90
   name: konnect
-  prefix: healthcare
+  prefix: healthcaregw

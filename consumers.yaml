@@ -1,0 +1,4 @@
+consumers:
+- keyauth_credentials:
+  - key: fhir_key
+  username: ElaitFhirConsumer

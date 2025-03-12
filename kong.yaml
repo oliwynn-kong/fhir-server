@@ -8,24 +8,26 @@ services:
   id: 96a0f6da-e53e-50d5-8014-470f314419e9
   name: fhir-server-api
   path: /
-  plugins: 
-  - name: key-auth
-    enabled: true
-    protocols:
-      - grpc
-      - grpcs
-      - http
-      - https
-      - ws
-      - wss
-    config:
+  plugins:
+  - config:
+      anonymous: null
       hide_credentials: false
       key_in_body: false
       key_in_header: true
       key_in_query: true
       key_names:
-        - apikey
+      - apikey
+      realm: null
       run_on_preflight: true
+    enabled: true
+    name: key-auth
+    protocols:
+    - grpc
+    - grpcs
+    - http
+    - https
+    - ws
+    - wss
   port: 3000
   protocol: http
   routes:
